@@ -26,9 +26,7 @@ def home():
 def get_state():
     state = env.state_manager.get_state()
 
-    if state is None:
-        # auto initialize (VERY IMPORTANT for hackathon)
-        state = env.reset("easy")
+   
 
     return jsonify(state)
 # -----------------------------
@@ -72,4 +70,4 @@ def step():
 # RUN SERVER
 # -----------------------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+    app.run(host="0.0.0.0", port=8000, debug=False)
