@@ -1,37 +1,31 @@
 from flask import Flask, request, jsonify
-
-# IMPORT YOUR ENV + AGENT
 from env.environment import HealthcareEnv
 from models.action import ClaimAction
-from agent.rule_based_agent import RuleBasedAgent
 
-# ✅ GLOBAL INSTANCES (VERY IMPORTANT)
+# ✅ GLOBAL ENV (VERY IMPORTANT)
 env = HealthcareEnv()
-agent = RuleBasedAgent()
 
-# CREATE APP
 app = Flask(__name__)
 
-# -----------------------------
-# ROOT (TEST)
-# -----------------------------
-@app.route("/")
+# -----------------------------------
+# ROOT (optional)
+# -----------------------------------
+@app.route("/", methods=["GET"])
 def home():
-    return jsonify({"message": "Healthcare Claim API is running ✅"})
+    return jsonify({
+        "message": "Healthcare Claim API is running 🚀"
+    })
 
-# -----------------------------
-# STATE ENDPOINT
-# -----------------------------
-@app.route("/state", methods=["GET"])
-def get_state():
-    return jsonify(env.state_manager.get_state())
 
-# -----------------------------
-# RESET ENDPOINT
-# -----------------------------
-@app.route("/reset", methods=["GET"])
+# -----------------------------------
+# RESET (🔥 MUST BE POST)
+# -----------------------------------
+@app.route("/reset", methods=["POST"])
 def reset():
-    task_level = request.args.get("task_level", "easy")
+    data = request.json or {}
+
+    task_level = data.get("task_level", "medium")
+
     state = env.reset(task_level)
 
     return jsonify({
@@ -39,17 +33,31 @@ def reset():
         "state": state
     })
 
-# -----------------------------
-# STEP ENDPOINT
-# -----------------------------
+
+# -----------------------------------
+# STATE (GET)
+# -----------------------------------
+@app.route("/state", methods=["GET"])
+def get_state():
+    state = env.state_manager.get_state()
+    return jsonify(state)
+
+
+# -----------------------------------
+# STEP (POST)
+# -----------------------------------
 @app.route("/step", methods=["POST"])
 def step():
-    data = request.get_json()
+    data = request.json or {}
+
+    action_type = data.get("action_type")
+    new_code = data.get("new_code")
+    justification = data.get("justification")
 
     action = ClaimAction(
-        action_type=data.get("action_type"),
-        new_code=data.get("new_code"),
-        justification=data.get("justification")
+        action_type=action_type,
+        new_code=new_code,
+        justification=justification
     )
 
     state, reward, done, info = env.step(action)
@@ -61,8 +69,9 @@ def step():
         "info": info
     })
 
-# -----------------------------
+
+# -----------------------------------
 # RUN SERVER
-# -----------------------------
+# -----------------------------------
 if __name__ == "__main__":
-    app.run(debug=True, port=8000)
+    app.run(host="0.0.0.0", port=8000, debug=True)
