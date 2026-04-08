@@ -1,63 +1,64 @@
 from flask import Flask, request, jsonify
+
+# IMPORT YOUR ENV + AGENT
 from env.environment import HealthcareEnv
 from models.action import ClaimAction
+from agent.rule_based_agent import RuleBasedAgent
 
-# ✅ GLOBAL ENV (VERY IMPORTANT)
+# ✅ GLOBAL INSTANCES (VERY IMPORTANT)
 env = HealthcareEnv()
+agent = RuleBasedAgent()
 
+# CREATE APP
 app = Flask(__name__)
 
-# -----------------------------------
-# ROOT (optional)
-# -----------------------------------
-@app.route("/", methods=["GET"])
+# -----------------------------
+# ROOT (TEST)
+# -----------------------------
+@app.route("/")
 def home():
-    return jsonify({
-        "message": "Healthcare Claim API is running 🚀"
-    })
+    return jsonify({"message": "Healthcare Claim API is running ✅"})
 
-
-# -----------------------------------
-# RESET (🔥 MUST BE POST)
-# -----------------------------------
-@app.route("/reset", methods=["POST"])
-def reset():
-    data = request.json or {}
-
-    task_level = data.get("task_level", "medium")
-
-    state = env.reset(task_level)
-
-    return jsonify({
-        "message": f"Environment reset to {task_level}",
-        "state": state
-    })
-
-
-# -----------------------------------
-# STATE (GET)
-# -----------------------------------
+# -----------------------------
+# STATE ENDPOINT
+# -----------------------------
 @app.route("/state", methods=["GET"])
 def get_state():
     state = env.state_manager.get_state()
+
+    if state is None:
+        # auto initialize (VERY IMPORTANT for hackathon)
+        state = env.reset("easy")
+
     return jsonify(state)
+# -----------------------------
+# RESET ENDPOINT
+# -----------------------------
+@app.route("/reset", methods=["POST"])
+def reset():
+    data = request.get_json(silent=True) or {}
 
+    task_level = data.get("task_level", "easy")
 
-# -----------------------------------
-# STEP (POST)
-# -----------------------------------
+    state = env.reset(task_level)
+
+    print("RESET CALLED ✅")  # debug
+
+    return jsonify({
+        "state": state
+    })
+
+# -----------------------------
+# STEP ENDPOINT
+# -----------------------------
 @app.route("/step", methods=["POST"])
 def step():
-    data = request.json or {}
-
-    action_type = data.get("action_type")
-    new_code = data.get("new_code")
-    justification = data.get("justification")
+    data = request.get_json()
 
     action = ClaimAction(
-        action_type=action_type,
-        new_code=new_code,
-        justification=justification
+        action_type=data.get("action_type"),
+        new_code=data.get("new_code"),
+        justification=data.get("justification")
     )
 
     state, reward, done, info = env.step(action)
@@ -69,9 +70,8 @@ def step():
         "info": info
     })
 
-
-# -----------------------------------
+# -----------------------------
 # RUN SERVER
-# -----------------------------------
+# -----------------------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=True)
+    app.run(debug=True, port=8000)
