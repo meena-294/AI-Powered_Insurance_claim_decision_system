@@ -42,11 +42,9 @@ def reset():
 
     state = env.reset(task_level)
 
-    print("RESET CALLED ✅")  # debug
+ # debug
 
-    return jsonify({
-        "state": state
-    })
+    return jsonify(state)
 
 # -----------------------------
 # STEP ENDPOINT
@@ -74,4 +72,4 @@ def step():
 # RUN SERVER
 # -----------------------------
 if __name__ == "__main__":
-    app.run(debug=True, port=8000)
+    app.run(host="0.0.0.0", port=8000)
