@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from typing import Optional, Dict, Any
 import uvicorn
 
+# Ensure these match your folder names exactly
 from env.environment import HealthcareEnv
 from models.action import ClaimAction
 from agent.rule_based_agent import RuleBasedAgent
@@ -23,8 +24,9 @@ def health():
     return {"status": "ok"}
 
 # --- RESET ENDPOINT ---
-# This version handles BOTH query parameters and JSON body payloads
+# Added @app.post("/reset/") to fix potential "Method Not Allowed" from trailing slashes
 @app.post("/reset")
+@app.post("/reset/")
 async def reset(payload: Dict[str, Any] = Body(None), task_level: Optional[str] = None):
     """
     Handles:
@@ -46,8 +48,8 @@ async def reset(payload: Dict[str, Any] = Body(None), task_level: Optional[str] 
 
 # --- STATE ENDPOINT ---
 @app.get("/state")
+@app.get("/state/")
 def get_state():
-    # Ensuring we return a dictionary
     return env.state_manager.get_state()
 
 # --- STEP ENDPOINT ---
@@ -57,6 +59,7 @@ class StepRequest(BaseModel):
     justification: Optional[str] = None
 
 @app.post("/step")
+@app.post("/step/")
 def step(request: StepRequest):
     action = ClaimAction(
         action_type=request.action_type,
