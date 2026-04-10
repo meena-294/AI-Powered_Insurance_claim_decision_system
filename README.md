@@ -1,3 +1,17 @@
+
+title: AI-Powered Healthcare Claim Decision Syste
+emoji: 🏆
+colorFrom: indigo
+colorTo: green
+sdk: docker
+sdk_version: 6.11.0
+app_file: app.py
+pinned: false
+
+
+
+
+
 # 🏥 AI-Powered Healthcare Claim Decision System
 
 An intelligent system that simulates multi-step healthcare insurance claim processing using rule-based reasoning and reinforcement learning concepts.
